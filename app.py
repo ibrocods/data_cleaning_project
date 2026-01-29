@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import io
+import os
 
 st.set_page_config(page_title="Interactive Data Cleaner", layout="wide")
 
@@ -12,9 +12,12 @@ Upload a CSV file to get started.
 
 uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
 
+
 if uploaded_file is not None:
     # Load data
     df = pd.read_csv(uploaded_file)
+    original_filename = uploaded_file.name
+    base_name, ext = os.path.splitext(original_filename)
     
     st.subheader("📊 Data Preview")
     st.write(f"Dataset contains **{df.shape[0]}** rows and **{df.shape[1]}** columns.")
@@ -138,10 +141,11 @@ if uploaded_file is not None:
         
         # Download button
         csv = st.session_state.df.to_csv(index=False).encode('utf-8')
+        cleaned_filename = f"{base_name}_cleaned{ext}"
         st.download_button(
             label="📥 Download Cleaned CSV",
             data=csv,
-            file_name="cleaned_data.csv",
+            file_name=cleaned_filename,
             mime="text/csv",
         )
         
