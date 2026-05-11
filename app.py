@@ -10,14 +10,26 @@ Welcome to your personal data cleaning consultant! This tool helps you identify 
 Upload a CSV file to get started.
 """)
 
-uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+uploaded_file = st.file_uploader("Choose a CSV file or Excel", type=["csv", "xlsx"])
 
 
 if uploaded_file is not None:
-    # Load data
-    df = pd.read_csv(uploaded_file)
     original_filename = uploaded_file.name
     base_name, ext = os.path.splitext(original_filename)
+    
+    # Load data based on file extension
+    try:
+        if ext.lower() == '.csv':
+            df = pd.read_csv(uploaded_file)
+        elif ext.lower() == '.xlsx':
+            # Specify the engine for Excel files
+            df = pd.read_excel(uploaded_file, engine='openpyxl') 
+    except Exception as e:
+        st.error(f"Error loading file: {e}")
+        st.stop() # Stops the rest of the app from running if there's an error
+
+
+
     
     st.subheader("📊 Data Preview")
     st.write(f"Dataset contains **{df.shape[0]}** rows and **{df.shape[1]}** columns.")
@@ -89,6 +101,9 @@ if uploaded_file is not None:
         
         for col in cols_with_missing:
             with st.expander(f"Missing values in '{col}' ({missing_data[col]} found)"):
+                st.write(f" **Preview of rows where '{col}' is missing:** ")
+                missing_context_df = st.session_state.df[st.session_state.df[col].isnull()]
+                st.dataframe(missing_context_df)
                 is_numeric = pd.api.types.is_numeric_dtype(st.session_state.df[col])
                 
                 options = ["Select an action...", "Delete rows with missing values"]
